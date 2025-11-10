@@ -1,0 +1,1 @@
+{"root":["./src/app.tsx","./src/main.tsx","./src/components/bulkadd.tsx","./src/components/playerform.tsx","./src/components/playerlist.tsx","./src/components/roundhistory.tsx","./src/components/settings.tsx","./src/lib/parse.ts","./src/lib/shuffler.ts","./src/lib/types.ts"],"version":"5.9.3"}
