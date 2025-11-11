@@ -24,7 +24,6 @@ export default function App() {
     },
   });
 
-  // Secondary display helper to avoid odd fallback chars
   const displayNameOf = (id: string) =>
     session.players.find((p) => p.id === id)?.name || "-";
 
