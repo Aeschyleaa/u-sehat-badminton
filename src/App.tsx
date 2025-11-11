@@ -27,7 +27,6 @@ export default function App() {
   const displayNameOf = (id: string) =>
     session.players.find((p) => p.id === id)?.name || "-";
 
-  // Load from localStorage once on mount
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
