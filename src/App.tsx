@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import Settings from "./components/Settings";
 import PlayerForm from "./components/PlayerForm";
 import BulkAdd from "./components/BulkAdd";
@@ -53,7 +53,7 @@ export default function App() {
   }, [session]);
 
   const nameOf = (id: string) =>
-    session.players.find((p) => p.id === id)?.name || "—";
+    session.players.find((p) => p.id === id)?.name || "-";
 
   const addPlayer = (
     p: Omit<Player, "id" | "gamesPlayed" | "lastPlayedAt">
@@ -275,8 +275,7 @@ export default function App() {
               </div>
             )}
             <div className="mt-3 text-sm text-gray-600">
-              Courts: {session.settings.courts} • Players:{" "}
-              {session.players.length}
+              Courts: {session.settings.courts} • Players: {session.players.length}
             </div>
           </div>
 
@@ -294,3 +293,8 @@ export default function App() {
     </div>
   );
 }
+
+
+
+
+
