@@ -4,8 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Badminton Shuffler</title>
-    <!-- Use absolute path so Vite prepends base ('/u-sehat-badminton/') in build -->
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <!-- Resolve favicon against Vite base at build time -->
+    <link rel="icon" href="%BASE_URL%favicon.svg" type="image/svg+xml" />
   </head>
   <body class="bg-gray-50 text-gray-900">
     <div id="root"></div>
