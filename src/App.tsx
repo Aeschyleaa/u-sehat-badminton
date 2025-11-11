@@ -32,7 +32,12 @@ export default function App() {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
         const saved: Session = JSON.parse(raw);
-        setSession(saved);
+        // Backward compatibility: older saves have no 'arrived'. Assume true.
+        const migrated: Session = {
+          ...saved,
+          players: saved.players.map((p) => ({ ...p, arrived: p.arrived ?? true })),
+        };
+        setSession(migrated);
         const maxId = saved.players.reduce(
           (m, p) => Math.max(m, Number(p.id) || 0),
           0
@@ -54,13 +59,13 @@ export default function App() {
     session.players.find((p) => p.id === id)?.name || "-";
 
   const addPlayer = (
-    p: Omit<Player, "id" | "gamesPlayed" | "lastPlayedAt">
+    p: Omit<Player, "id" | "gamesPlayed" | "lastPlayedAt" | "arrived">
   ) => {
     setSession((s) => ({
       ...s,
       players: [
         ...s.players,
-        { id: String(nextId++), gamesPlayed: 0, lastPlayedAt: 0, ...p },
+        { id: String(nextId++), gamesPlayed: 0, lastPlayedAt: 0, arrived: true, ...p },
       ],
     }));
   };
@@ -83,7 +88,7 @@ export default function App() {
   };
 
   const addMany = (
-    items: Omit<Player, "id" | "gamesPlayed" | "lastPlayedAt">[]
+    items: Omit<Player, "id" | "gamesPlayed" | "lastPlayedAt" | "arrived">[]
   ) => {
     setSession((s) => ({
       ...s,
@@ -93,17 +98,18 @@ export default function App() {
           id: String(nextId++),
           gamesPlayed: 0,
           lastPlayedAt: 0,
+          arrived: true,
           ...p,
         })),
       ],
     }));
   };
 
-  const canGenerate = session.players.length >= 4;
+  const canGenerate = session.players.filter((p) => p.arrived).length >= 4;
 
   const updatePlayer = (
     id: string,
-    patch: Partial<Pick<Player, "gender" | "level">>
+    patch: Partial<Pick<Player, "gender" | "level" | "arrived" | "partyId">>
   ) => {
     setSession((s) => ({
       ...s,
@@ -167,8 +173,9 @@ export default function App() {
   };
 
   const blockedInfo = useMemo(() => {
-    if (session.players.length < 4) return null;
-    const probe = generateRound(session);
+    const active = { ...session, players: session.players.filter((p) => p.arrived) } as Session;
+    if (active.players.length < 4) return null;
+    const probe = generateRound(active);
     const last = probe.rounds[probe.rounds.length - 1];
     const made = last?.matches.length ?? 0;
     return { made };
@@ -255,6 +262,17 @@ export default function App() {
                   className="rounded-md border px-3 py-2 text-gray-700 hover:bg-gray-50"
                 >
                   New Session
+                </button>
+                <button
+                  onClick={() =>
+                    setSession((s) => ({
+                      ...s,
+                      players: s.players.map((p) => ({ ...p, arrived: true })),
+                    }))
+                  }
+                  className="rounded-md border px-3 py-2 text-gray-700 hover:bg-gray-50"
+                >
+                  Mark All Arrived
                 </button>
                 <button
                   disabled={!canGenerate}

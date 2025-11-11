@@ -3,7 +3,7 @@ import { Player } from '../lib/types'
 type Props = {
   players: Player[]
   onRemove: (id: string) => void
-  onUpdate: (id: string, patch: Partial<Pick<Player, 'gender' | 'level'>>) => void
+  onUpdate: (id: string, patch: Partial<Pick<Player, 'gender' | 'level' | 'arrived' | 'partyId'>>) => void
 }
 
 export default function PlayerList({ players, onRemove, onUpdate }: Props) {
@@ -36,6 +36,23 @@ export default function PlayerList({ players, onRemove, onUpdate }: Props) {
                   <option value="advance">advance</option>
                 </select>
                 <span className="text-xs text-gray-500">played {p.gamesPlayed}</span>
+                <input
+                  value={p.partyId ?? ''}
+                  onChange={(e) => onUpdate(p.id, { partyId: e.target.value || null })}
+                  placeholder="Group"
+                  className="rounded-md border px-2 py-1 text-xs"
+                  style={{ width: 80 }}
+                  title="Players with same group play same court"
+                />
+                <label className="inline-flex items-center gap-1 text-xs ml-2">
+                  <input
+                    type="checkbox"
+                    className="rounded border-gray-300"
+                    checked={!!p.arrived}
+                    onChange={(e) => onUpdate(p.id, { arrived: e.target.checked })}
+                  />
+                  Arrived
+                </label>
               </div>
               <button className="text-sm text-red-600 hover:underline" onClick={() => onRemove(p.id)}>Remove</button>
             </li>

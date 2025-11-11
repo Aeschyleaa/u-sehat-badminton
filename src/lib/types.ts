@@ -6,6 +6,8 @@ export type Player = {
   name: string
   gender: Gender
   level: Level
+  arrived: boolean
+  partyId?: string | null
   gamesPlayed: number
   lastPlayedAt: number
 }

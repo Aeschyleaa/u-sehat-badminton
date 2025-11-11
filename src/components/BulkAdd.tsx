@@ -3,7 +3,7 @@ import { Gender, Level, Player } from '../lib/types'
 import { extractNames } from '../lib/parse'
 
 type Props = {
-  onAddMany: (players: Omit<Player, 'id' | 'gamesPlayed' | 'lastPlayedAt'>[]) => void
+  onAddMany: (players: Omit<Player, 'id' | 'gamesPlayed' | 'lastPlayedAt' | 'arrived'>[]) => void
 }
 
 export default function BulkAdd({ onAddMany }: Props) {

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Gender, Level, Player } from '../lib/types'
 
 type Props = {
-  onAdd: (p: Omit<Player, 'id' | 'gamesPlayed' | 'lastPlayedAt'>) => void
+  onAdd: (p: Omit<Player, 'id' | 'gamesPlayed' | 'lastPlayedAt' | 'arrived'>) => void
 }
 
 export default function PlayerForm({ onAdd }: Props) {

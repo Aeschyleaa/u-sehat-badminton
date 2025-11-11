@@ -23,21 +23,19 @@ function isMale(p: Player) {
 }
 
 function levelGroupValid(players: Player[]): boolean {
-  const b = players.filter(isBeginner).length
-  if (b === 0) return true
-  if (b === 2) return players.filter(isNonBeginner).length === 2
-  if (b === 4) return true
-  return false
+  // Allow any level composition among 4 players.
+  // When it is exactly 2 beginners + 2 non-beginners, we enforce mixed-level
+  // pairs at the pairing stage (one beginner + one non-beginner per pair).
+  // Relaxing this avoids benching minority-level players and improves fairness.
+  return true
 }
 
 function genderGroupValid(players: Player[]): boolean {
-  const f = players.filter(isFemale).length
-  // Allowed compositions for 4 players:
-  // - 0F (all male)
-  // - 4F (all female)
-  // - 2F + 2M (must be mixed pairs enforced at pairing stage)
-  if (f === 0 || f === 4 || f === 2) return true
-  return false
+  // Allow any gender composition among 4 players.
+  // When it is exactly 2F+2M, we still enforce mixed pairs at pairing stage.
+  // This relaxation prevents minority-gender players from being benched
+  // when the pool can't form exact 0/2/4 female groups.
+  return true
 }
 
 function allPairings([a, b, c, d]: string[]): MatchPair[] {
@@ -157,7 +155,9 @@ export function generateRound(session: Session): Session {
   const roundIndex = rounds.length + 1
   const playersById = Object.fromEntries(players.map((p) => [p.id, p]))
 
+  // Only consider players who have arrived/checked-in
   const remaining = [...players]
+    .filter((p) => p.arrived)
     .sort((a, b) => a.gamesPlayed - b.gamesPlayed || a.lastPlayedAt - b.lastPlayedAt)
 
   const groups: { ids: string[]; pairing: { pairA: MatchPair; pairB: MatchPair } }[] = []
@@ -177,12 +177,35 @@ export function generateRound(session: Session): Session {
     const poolSize = Math.min(pool.length, 16)
     const poolIds = pool.slice(0, poolSize).map((p) => p.id)
 
+    // Build friend groups (party) map from current pool only
+    const partyMap: Record<string, string[]> = {}
+    for (const p of pool.slice(0, poolSize)) {
+      const gid = p.partyId ?? null
+      if (!gid) continue
+      if (!partyMap[gid]) partyMap[gid] = []
+      partyMap[gid].push(p.id)
+    }
+    // Validate that a 4-player selection does not split any 2-4 size party
+    const partyGroupValid = (ids: string[]) => {
+      for (const gid of Object.keys(partyMap)) {
+        const members = partyMap[gid]
+        const size = members.length
+        if (size < 2) continue // singletons don't constrain
+        if (size > 4) continue // out-of-scope parties are ignored
+        let count = 0
+        for (const id of ids) if (members.includes(id)) count++
+        if (count !== 0 && count !== size) return false
+      }
+      return true
+    }
+
     let best: CandidateGroup | null = null
     const idsToPlayers = (ids: string[]) => ids.map((id) => playersById[id])
     for (const ids of combinations(poolIds, 4)) {
       const ps = idsToPlayers(ids)
       if (!levelGroupValid(ps)) continue
       if (!genderGroupValid(ps)) continue
+      if (!partyGroupValid(ids)) continue
       const cand = groupPenalty(ids, playersById, tPairs, oPairs, settings.repeatLimit)
       if (!cand) continue
       if (!best || cand.penalty < best.penalty) best = cand
@@ -197,6 +220,7 @@ export function generateRound(session: Session): Session {
           const ps = idsToPlayers(ids)
           if (!levelGroupValid(ps)) continue
           if (!genderGroupValid(ps)) continue
+          if (!partyGroupValid(ids)) continue
           const cand = groupPenalty(ids, playersById, tPairs, oPairs, relaxed)
           if (!cand) continue
           if (!best || cand.penalty < best.penalty) best = cand
@@ -260,6 +284,7 @@ export function generateRound(session: Session): Session {
     groups.push({ ids: best.ids, pairing: best.pairing })
   }
 
+  // Bench only includes arrived players who weren't used this round
   const bench = remaining.filter((p) => !used.has(p.id)).map((p) => p.id)
 
   const matches: Match[] = groups.map((g, i) => ({
