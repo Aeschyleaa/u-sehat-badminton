@@ -169,7 +169,6 @@ export default function App() {
   };
 
   const blockedInfo = useMemo(() => {
-    // Quick probe: try generate; if 0 matches, report blocked
     if (session.players.length < 4) return null;
     const probe = generateRound(session);
     const last = probe.rounds[probe.rounds.length - 1];
