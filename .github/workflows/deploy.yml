@@ -20,6 +20,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
@@ -29,11 +31,17 @@ jobs:
         run: |
           node -v
           npm -v
-      - name: Install deps
-        run: npm install --include=dev
-      - name: Build
+      - name: Install deps (prefer lockfile)
         run: |
-          npm run build || npx --yes vite build
+          if [ -f package-lock.json ]; then npm ci; else npm install --include=dev; fi
+      - name: Check vite availability
+        run: |
+          npx vite --version || (echo "vite not found" && exit 1)
+      - name: Build
+        env:
+          CI: false
+        run: |
+          npx vite build
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
